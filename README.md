@@ -1,7 +1,7 @@
 # VideoExporter
 Allows to export video, presented as AVAsset, with CIFilter.
 
-Is extremely easy to use! You shouls just call one of the VideoExporter's methods:
+Is extremely easy to use! You should just call one of the VideoExporter's methods:
 
 - (void)exportVideoAtURL:(NSURL *)videoURL withCIFilterName:(NSString *)filterName andCompletionHandler:(ExportCompletionHandler)completionHandler;
 - (void)exportVideoAsset:(AVAsset *)videoAsset withCIFilterName:(NSString *)filterName andCompletionHandler:(ExportCompletionHandler)completionHandler;
