@@ -6,6 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 
 
 typedef void (^ExportCompletionHandler)(BOOL success, NSURL *movieURL);
@@ -15,6 +16,9 @@ typedef void (^ExportCompletionHandler)(BOOL success, NSURL *movieURL);
 
 + (instancetype)sharedExporter;
 - (void)exportVideoAtURL:(NSURL *)videoURL
+        withCIFilterName:(NSString *)filterName
+    andCompletionHandler:(ExportCompletionHandler)completionHandler;
+- (void)exportVideoAsset:(AVAsset *)videoAsset
         withCIFilterName:(NSString *)filterName
     andCompletionHandler:(ExportCompletionHandler)completionHandler;
 

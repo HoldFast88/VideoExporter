@@ -8,7 +8,6 @@
 #import "VideoExporter.h"
 #import <CoreImage/CoreImage.h>
 #import <GLKit/GLKit.h>
-#import <AVFoundation/AVFoundation.h>
 #import <MobileCoreServices/MobileCoreServices.h>
 
 
@@ -45,6 +44,11 @@ static CVPixelBufferRef renderedOutputPixelBufferForRecording = NULL;
 
 - (void)exportVideoAtURL:(NSURL *)videoURL withCIFilterName:(NSString *)filterName andCompletionHandler:(ExportCompletionHandler)completionHandler
 {
+    [self exportVideoAsset:[AVAsset assetWithURL:videoURL] withCIFilterName:filterName andCompletionHandler:completionHandler];
+}
+
+- (void)exportVideoAsset:(AVAsset *)videoAsset withCIFilterName:(NSString *)filterName andCompletionHandler:(ExportCompletionHandler)completionHandler
+{
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     self.coreImageContext = [CIContext contextWithEAGLContext:self.context];
     sDeviceRgbColorSpace = CGColorSpaceCreateDeviceRGB();
@@ -52,11 +56,10 @@ static CVPixelBufferRef renderedOutputPixelBufferForRecording = NULL;
     glGenRenderbuffers(1, &_renderBuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, _renderBuffer);
     
-    AVAsset *videoAssetForExporting = [AVAsset assetWithURL:videoURL];
-    AVAssetTrack *videoTrack = [[videoAssetForExporting tracksWithMediaType:AVMediaTypeVideo] firstObject];
+    AVAssetTrack *videoTrack = [[videoAsset tracksWithMediaType:AVMediaTypeVideo] firstObject];
     
     NSError *error = nil;
-    self.assetReader = [AVAssetReader assetReaderWithAsset:videoAssetForExporting error:&error];
+    self.assetReader = [AVAssetReader assetReaderWithAsset:videoAsset error:&error];
     NSParameterAssert(self.assetReader != nil);
     
     // Video
@@ -149,7 +152,7 @@ static CVPixelBufferRef renderedOutputPixelBufferForRecording = NULL;
         
         [self.assetWriter finishWritingWithCompletionHandler:^{
             if (self.assetWriter.status == AVAssetWriterStatusCompleted) {
-                [self createAssetWithVideoTrackFromAsset:self.assetWriter.outputURL audioTrackFromAsset:videoURL andCompletionHandler:^(BOOL success, NSURL *movieURL) {
+                [self createAssetWithVideoTrackFromAsset:[AVAsset assetWithURL:self.assetWriter.outputURL] audioTrackFromAsset:videoAsset andCompletionHandler:^(BOOL success, NSURL *movieURL) {
                     if (completionHandler) {
                         completionHandler(self.assetWriter.status == AVAssetWriterStatusCompleted && success, movieURL);
                     }
@@ -165,11 +168,8 @@ static CVPixelBufferRef renderedOutputPixelBufferForRecording = NULL;
 
 #pragma mark - Private
 
-- (void)createAssetWithVideoTrackFromAsset:(NSURL *)videoAssetURL audioTrackFromAsset:(NSURL *)audioAssetURL andCompletionHandler:(ExportCompletionHandler)completionHandler
+- (void)createAssetWithVideoTrackFromAsset:(AVAsset *)videoAsset audioTrackFromAsset:(AVAsset *)audioAsset andCompletionHandler:(ExportCompletionHandler)completionHandler
 {
-    AVAsset *videoAsset = [AVAsset assetWithURL:videoAssetURL];
-    AVAsset *audioAsset = [AVAsset assetWithURL:audioAssetURL];
-    
     AVAssetTrack *assetVideoTrack = [[videoAsset tracksWithMediaType:AVMediaTypeVideo] firstObject];
     AVAssetTrack *assetAudioTrack = [[audioAsset tracksWithMediaType:AVMediaTypeAudio] firstObject];
     
